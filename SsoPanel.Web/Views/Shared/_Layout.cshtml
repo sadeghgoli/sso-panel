@@ -1,0 +1,44 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Active(string name) => string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string t ? t + " | " : "")پنل سرویس ورود یکپارچه</title>
+    <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" />
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <a class="brand" asp-controller="Dashboard" asp-action="Index">پنل ورود یکپارچه (SSO)</a>
+        <nav>
+            <a class="@Active("Dashboard")" asp-controller="Dashboard" asp-action="Index">داشبورد</a>
+            <a class="@Active("Clients")@Active("ApiKeys")@Active("Domains")" asp-controller="Clients" asp-action="Index">سرویس‌گیرندگان</a>
+            <a class="@Active("Logs")" asp-controller="Logs" asp-action="Index">گزارش درخواست‌ها</a>
+            <a class="@Active("Docs")" asp-controller="Docs" asp-action="Index">راهنمای استفاده از API</a>
+            <a class="@Active("Auth")" asp-controller="Auth" asp-action="ChangePassword">تغییر رمز عبور</a>
+        </nav>
+        <form asp-controller="Auth" asp-action="Logout" method="post">
+            <div class="muted" style="color:#9aa6bd;margin-bottom:6px;font-size:12px">@User.Identity?.Name</div>
+            <button type="submit" class="btn btn-light">خروج</button>
+        </form>
+    </aside>
+    <main class="main">
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success">@ok</div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger">@err</div>
+        }
+        @RenderBody()
+    </main>
+</div>
+<script src="~/js/panel.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

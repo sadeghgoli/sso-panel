@@ -1,0 +1,36 @@
+@model LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ورود به پنل | سرویس ورود یکپارچه</title>
+    <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" />
+</head>
+<body>
+<div class="login-page">
+    <div class="card login-card">
+        <h1>پنل مدیریت ورود یکپارچه</h1>
+        <p class="sub">برای مدیریت سرویس‌گیرندگان، کلیدهای API و دامنه‌ها وارد شوید.</p>
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="field-error"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div class="field">
+                <label asp-for="Username"></label>
+                <input asp-for="Username" type="text" autocomplete="username" autofocus />
+                <span asp-validation-for="Username" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="field-error"></span>
+            </div>
+            <button type="submit" class="btn">ورود</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+[Unit]
+Description=SSO client panel (API keys and trusted domains)
+After=network.target postgresql.service
+
+[Service]
+WorkingDirectory=/opt/sso-panel
+ExecStart=/usr/bin/dotnet /opt/sso-panel/SsoPanel.Web.dll
+Restart=always
+RestartSec=10
+SyslogIdentifier=sso-panel
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+# Secrets live outside the app folder so re-deploys don't overwrite them.
+EnvironmentFile=/etc/sso-panel.env
+
+[Install]
+WantedBy=multi-user.target

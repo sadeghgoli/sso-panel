@@ -1,0 +1,24 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "داشبورد";
+}
+<div class="page-header">
+    <h1>داشبورد</h1>
+    <a class="btn" asp-controller="Clients" asp-action="Create">+ سرویس‌گیرنده جدید</a>
+</div>
+
+<div class="stats">
+    <div class="stat"><div class="value">@Model.ActiveClientCount <span class="muted" style="font-size:14px">از @Model.ClientCount</span></div><div class="label">سرویس‌گیرنده فعال</div></div>
+    <div class="stat"><div class="value">@Model.ActiveKeyCount</div><div class="label">کلید API فعال</div></div>
+    <div class="stat"><div class="value">@Model.ActiveDomainCount</div><div class="label">دامنه مجاز فعال</div></div>
+    <div class="stat"><div class="value">@Model.RequestsLast24h</div><div class="label">درخواست در ۲۴ ساعت اخیر</div></div>
+    <div class="stat"><div class="value" style="color:var(--danger)">@Model.RejectedLast24h</div><div class="label">درخواست رد شده (۲۴ ساعت)</div></div>
+</div>
+
+<div class="card">
+    <div class="page-header" style="margin-bottom:10px">
+        <h2 style="margin:0">آخرین درخواست‌ها</h2>
+        <a asp-controller="Logs" asp-action="Index">مشاهده همه</a>
+    </div>
+    <partial name="_RequestLogTable" model="Model.RecentRequests" />
+</div>

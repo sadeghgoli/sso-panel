@@ -1,0 +1,41 @@
+@model ClientFormViewModel
+@{
+    var isEdit = Model.Id.HasValue;
+    ViewData["Title"] = isEdit ? "ویرایش سرویس‌گیرنده" : "سرویس‌گیرنده جدید";
+}
+<div class="page-header">
+    <h1>@ViewData["Title"]</h1>
+    @if (isEdit)
+    {
+        <a class="btn btn-outline" asp-action="Details" asp-route-id="@Model.Id">بازگشت</a>
+    }
+    else
+    {
+        <a class="btn btn-outline" asp-action="Index">بازگشت</a>
+    }
+</div>
+<div class="card" style="max-width:760px">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post">
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" type="text" placeholder="مثلا: سامانه ۱۳۷" />
+                <span asp-validation-for="Name" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="ContactName"></label>
+                <input asp-for="ContactName" type="text" />
+            </div>
+            <div class="field">
+                <label asp-for="ContactPhone"></label>
+                <input asp-for="ContactPhone" type="text" class="ltr" />
+            </div>
+        </div>
+        <div class="field">
+            <label asp-for="Description"></label>
+            <textarea asp-for="Description"></textarea>
+        </div>
+        <label class="check"><input asp-for="IsActive" /> فعال</label>
+        <button type="submit" class="btn">ذخیره</button>
+    </form>
+</div>

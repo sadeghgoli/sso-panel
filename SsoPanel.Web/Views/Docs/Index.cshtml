@@ -1,0 +1,72 @@
+@model DocsViewModel
+@{
+    ViewData["Title"] = "راهنمای استفاده از API";
+    var sso = Model.SsoBaseUrl;
+}
+<div class="page-header"><h1>راهنمای استفاده از سرویس ورود یکپارچه</h1></div>
+
+<div class="card docs">
+    <h2>روش‌های احراز سرویس‌گیرنده</h2>
+    <ul>
+        <li><strong>کلید API:</strong> کلید دریافتی از این پنل را در هدر <code>X-Api-Key</code> هر درخواست به <code>@sso/api/*</code> ارسال کنید. برای فراخوانی از سمت سرور (Backend، اپلیکیشن موبایل و ...) این روش الزامی است.</li>
+        <li><strong>دامنه مجاز:</strong> اگر دامنه وب‌سایت شما در پنل ثبت شده باشد، درخواست‌هایی که مرورگر از آن دامنه ارسال می‌کند (با هدر <code>Origin</code>) بدون کلید پذیرفته می‌شوند. همین دامنه‌ها به‌عنوان آدرس بازگشت (callback) در ورود SSO مجاز هستند.</li>
+    </ul>
+    <div class="alert alert-warning" style="margin-top:10px">
+        هدر <code>Origin</code> توسط سرورها قابل جعل است؛ بنابراین دامنه مجاز فقط برای درخواست‌های مرورگر معنا دارد.
+        کلید API را هرگز در کد سمت مرورگر (JavaScript عمومی) قرار ندهید.
+    </div>
+</div>
+
+<div class="card docs">
+    <h2>۱. ورود کاربر از طریق صفحه SSO (Redirect)</h2>
+    <p>کاربر را به آدرس زیر هدایت کنید. <code>returnUrl</code> باید روی یکی از دامنه‌های مجاز شما باشد:</p>
+    <pre>@sso/account/login?returnUrl=https://app.example.ir/auth/callback</pre>
+    <p>پس از ورود موفق، کاربر به آدرس بازگشت با پارامترهای زیر هدایت می‌شود:</p>
+    <pre>https://app.example.ir/auth/callback?token=ACCESS_TOKEN&amp;refreshToken=REFRESH_TOKEN</pre>
+    <p>ورود از طریق سامانه وزارت کشور (MOI):</p>
+    <pre>@sso/account/redirect?provider=moi&amp;returnUrl=https://app.example.ir/auth/callback</pre>
+</div>
+
+<div class="card docs">
+    <h2>۲. ارسال کد یکبار مصرف (OTP) برای اپلیکیشن‌ها</h2>
+    <p><code>POST @sso/api/citizen/send-login-otp</code></p>
+    <h3>بدنه درخواست</h3>
+    <pre>{
+  "phoneNumber": "09xxxxxxxxx",
+  "melliCode": "0123456789"
+}</pre>
+    <h3>پاسخ موفق (200)</h3>
+    <pre>{ "success": true, "data": { "message": "کد تایید ارسال شد" } }</pre>
+    <h3>پاسخ خطا</h3>
+    <pre>400: { "success": false, "message": "شماره تلفن و کد ملی الزامی است" }
+401: { "success": false, "message": "کلید API نامعتبر است" }</pre>
+
+    <h3>نمونه با curl (سمت سرور)</h3>
+    <pre>curl -X POST "@sso/api/citizen/send-login-otp" \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: sso_XXXXXXXXXXXXXXXXXXXXXXXX" \
+  -d '{"phoneNumber":"09xxxxxxxxx","melliCode":"0123456789"}'</pre>
+
+    <h3>نمونه با C# (سمت سرور)</h3>
+    <pre>using var http = new HttpClient { BaseAddress = new Uri("@sso") };
+http.DefaultRequestHeaders.Add("X-Api-Key", "sso_XXXXXXXXXXXXXXXXXXXXXXXX");
+var res = await http.PostAsJsonAsync("/api/citizen/send-login-otp",
+    new { phoneNumber = "09xxxxxxxxx", melliCode = "0123456789" });</pre>
+
+    <h3>نمونه با JavaScript از دامنه مجاز (بدون کلید)</h3>
+    <pre>const res = await fetch("@sso/api/citizen/send-login-otp", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ phoneNumber: "09xxxxxxxxx", melliCode: "0123456789" })
+});
+const result = await res.json();</pre>
+</div>
+
+<div class="card docs">
+    <h2>نکات</h2>
+    <ul>
+        <li>تغییرات کلیدها و دامنه‌ها در پنل، حداکثر ظرف یک دقیقه در سرویس SSO اعمال می‌شود.</li>
+        <li>کلید API فقط یک بار هنگام ساخت نمایش داده می‌شود. در صورت گم شدن، کلید قبلی را باطل و کلید جدید بسازید.</li>
+        <li>دامنه‌ها باید با <code>https</code> باشند (به جز <code>localhost</code> برای توسعه).</li>
+    </ul>
+</div>

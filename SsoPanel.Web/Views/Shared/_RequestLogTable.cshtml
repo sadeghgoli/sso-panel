@@ -1,0 +1,72 @@
+@model IEnumerable<ApiRequestLog>
+@{
+    var showClient = ViewData["ShowClient"] as bool? ?? true;
+}
+@if (!Model.Any())
+{
+    <p class="muted">درخواستی ثبت نشده است.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>زمان</th>
+                @if (showClient)
+                {
+                    <th>سرویس‌گیرنده</th>
+                }
+                <th>مسیر</th>
+                <th>روش احراز</th>
+                <th>Origin</th>
+                <th>IP</th>
+                <th>وضعیت</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var l in Model)
+            {
+                <tr>
+                    <td><span class="ltr">@l.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</span></td>
+                    @if (showClient)
+                    {
+                        <td>@(l.Client?.Name ?? "—")</td>
+                    }
+                    <td><code>@l.Path</code></td>
+                    <td>
+                        @if (l.ApiKeyId.HasValue)
+                        {
+                            <span class="badge badge-muted">کلید API</span>
+                        }
+                        else if (l.ClientId.HasValue)
+                        {
+                            <span class="badge badge-muted">دامنه مجاز</span>
+                        }
+                        else
+                        {
+                            <span class="muted">—</span>
+                        }
+                    </td>
+                    <td><code>@l.Origin</code></td>
+                    <td><code>@l.Ip</code></td>
+                    <td>
+                        @if (l.StatusCode < 400)
+                        {
+                            <span class="badge badge-success">@l.StatusCode</span>
+                        }
+                        else if (l.StatusCode == 401 || l.StatusCode == 403)
+                        {
+                            <span class="badge badge-danger">@l.StatusCode</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">@l.StatusCode</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

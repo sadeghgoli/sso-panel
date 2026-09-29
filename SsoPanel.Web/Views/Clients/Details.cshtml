@@ -1,0 +1,207 @@
+@model ClientDetailsViewModel
+@{
+    var c = Model.Client;
+    ViewData["Title"] = c.Name;
+}
+<div class="page-header">
+    <h1>
+        @c.Name
+        @if (c.IsActive)
+        {
+            <span class="badge badge-success">فعال</span>
+        }
+        else
+        {
+            <span class="badge badge-muted">غیرفعال</span>
+        }
+    </h1>
+    <div class="actions">
+        <a class="btn btn-outline" asp-action="Edit" asp-route-id="@c.Id">ویرایش</a>
+        <form asp-action="ToggleActive" asp-route-id="@c.Id" method="post" class="inline">
+            <button type="submit" class="btn btn-outline">@(c.IsActive ? "غیرفعال‌سازی" : "فعال‌سازی")</button>
+        </form>
+        <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="inline">
+            <button type="submit" class="btn btn-danger" data-confirm="این سرویس‌گیرنده همراه با همه کلیدها و دامنه‌هایش حذف شود؟">حذف</button>
+        </form>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.NewPlainKey))
+{
+    <div class="alert alert-warning">
+        <strong>کلید API جدید ساخته شد.</strong>
+        این کلید فقط همین یک بار نمایش داده می‌شود؛ آن را کپی کرده و به‌صورت امن به سرویس‌گیرنده تحویل دهید.
+        <div class="key-box">
+            <code id="new-key">@Model.NewPlainKey</code>
+            <button type="button" class="btn btn-sm" data-copy="#new-key">کپی</button>
+        </div>
+    </div>
+}
+
+<div class="card">
+    <h2>اطلاعات</h2>
+    <div class="form-grid">
+        <div><div class="muted">نام رابط</div>@(c.ContactName ?? "—")</div>
+        <div><div class="muted">تلفن رابط</div><span class="ltr">@(c.ContactPhone ?? "—")</span></div>
+        <div><div class="muted">تاریخ ایجاد</div><span class="ltr">@c.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span></div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(c.Description))
+    {
+        <p style="margin-top:12px">@c.Description</p>
+    }
+</div>
+
+<div class="card">
+    <h2>کلیدهای API</h2>
+    <p class="hint" style="margin-bottom:12px">
+        سرویس‌گیرنده باید کلید را در هدر <code>X-Api-Key</code> ارسال کند. برای فراخوانی از سمت سرور (Backend) استفاده از کلید الزامی است.
+    </p>
+    <form asp-controller="ApiKeys" asp-action="Create" method="post">
+        <input type="hidden" name="ClientId" value="@c.Id" />
+        <div class="form-grid" style="align-items:end">
+            <div class="field">
+                <label for="key-name">عنوان کلید</label>
+                <input id="key-name" name="Name" type="text" placeholder="مثلا: سرور اصلی" required maxlength="200" />
+            </div>
+            <div class="field">
+                <label for="key-exp">تاریخ انقضا (اختیاری)</label>
+                <input id="key-exp" name="ExpiresAt" type="date" />
+            </div>
+            <div class="field">
+                <button type="submit" class="btn">ساخت کلید جدید</button>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.ApiKeys.Count > 0)
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>عنوان</th>
+                    <th>پیشوند کلید</th>
+                    <th>ایجاد</th>
+                    <th>انقضا</th>
+                    <th>آخرین استفاده</th>
+                    <th>وضعیت</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var k in Model.ApiKeys)
+                {
+                    <tr>
+                        <td>@k.Name</td>
+                        <td><code>@(k.Prefix)…</code></td>
+                        <td><span class="ltr">@k.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span></td>
+                        <td><span class="ltr">@(k.ExpiresAt?.ToLocalTime().ToString("yyyy-MM-dd") ?? "—")</span></td>
+                        <td><span class="ltr">@(k.LastUsedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</span></td>
+                        <td>
+                            @if (k.RevokedAt != null)
+                            {
+                                <span class="badge badge-danger">باطل شده</span>
+                            }
+                            else if (!k.IsUsable)
+                            {
+                                <span class="badge badge-warning">منقضی</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success">فعال</span>
+                            }
+                        </td>
+                        <td class="actions">
+                            @if (k.RevokedAt == null)
+                            {
+                                <form asp-controller="ApiKeys" asp-action="Revoke" asp-route-id="@k.Id" method="post" class="inline">
+                                    <button type="submit" class="btn btn-sm btn-danger" data-confirm="این کلید باطل شود؟ درخواست‌های بعدی با این کلید رد خواهند شد.">ابطال</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-controller="ApiKeys" asp-action="Delete" asp-route-id="@k.Id" method="post" class="inline">
+                                    <button type="submit" class="btn btn-sm btn-outline" data-confirm="کلید باطل‌شده حذف شود؟">حذف</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="card">
+    <h2>دامنه‌های مجاز (بدون نیاز به کلید)</h2>
+    <p class="hint" style="margin-bottom:12px">
+        درخواست‌های مرورگر از این دامنه‌ها (بر اساس هدر <code>Origin</code>) بدون کلید API پذیرفته می‌شوند
+        و آدرس‌های بازگشت (callback) روی این دامنه‌ها برای ورود از طریق SSO مجاز هستند.
+    </p>
+    <form asp-controller="Domains" asp-action="Create" method="post">
+        <input type="hidden" name="ClientId" value="@c.Id" />
+        <div class="form-grid" style="align-items:end">
+            <div class="field">
+                <label for="domain-origin">دامنه</label>
+                <input id="domain-origin" name="Origin" type="text" class="ltr" placeholder="https://app.example.ir" required maxlength="300" />
+            </div>
+            <div class="field">
+                <label class="check" style="margin-bottom:8px"><input type="checkbox" name="AllowSubdomains" value="true" /> شامل زیردامنه‌ها</label>
+            </div>
+            <div class="field">
+                <button type="submit" class="btn">افزودن دامنه</button>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Domains.Count > 0)
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>دامنه</th>
+                    <th>زیردامنه‌ها</th>
+                    <th>وضعیت</th>
+                    <th>ایجاد</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var d in Model.Domains)
+                {
+                    <tr>
+                        <td><code>@d.Origin</code></td>
+                        <td>@(d.AllowSubdomains ? "بله" : "خیر")</td>
+                        <td>
+                            @if (d.IsActive)
+                            {
+                                <span class="badge badge-success">فعال</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-muted">غیرفعال</span>
+                            }
+                        </td>
+                        <td><span class="ltr">@d.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span></td>
+                        <td class="actions">
+                            <form asp-controller="Domains" asp-action="Toggle" asp-route-id="@d.Id" method="post" class="inline">
+                                <button type="submit" class="btn btn-sm btn-outline">@(d.IsActive ? "غیرفعال" : "فعال")</button>
+                            </form>
+                            <form asp-controller="Domains" asp-action="Delete" asp-route-id="@d.Id" method="post" class="inline">
+                                <button type="submit" class="btn btn-sm btn-danger" data-confirm="این دامنه حذف شود؟">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="card">
+    <h2>آخرین درخواست‌ها</h2>
+    <partial name="_RequestLogTable" model="Model.RecentRequests" view-data='new ViewDataDictionary(ViewData) { ["ShowClient"] = false }' />
+</div>

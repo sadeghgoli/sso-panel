@@ -1,0 +1,9 @@
+sudo -u postgres psql
+SET password_encryption = 'scram-sha-256';
+CREATE USER sso_panel WITH PASSWORD 'strong_panel_password';
+CREATE DATABASE sso_panel OWNER sso_panel;
+CREATE USER sso_web WITH PASSWORD 'strong_web_password';
+\q
+3. Test password login (it asks for the sso_panel password):
+
+psql "host=127.0.0.1 dbname=sso_panel user=sso_panel" -c "select version();"
